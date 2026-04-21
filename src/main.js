@@ -1,13 +1,9 @@
-class Main extends Phaser.Scene
-{
-
-const config = {  
+const config = {
     type: Phaser.AUTO,
     width: 800,
     height: 600,
-    scenes: [preload],
-    };
-const game = new Phaser.Game(config);
-
-
+    backgroundColor: '#0a0a12',
+    scene: [LogoScene, PreloadScene, MenuScene, LoadingScene],
 };
+
+const game = new Phaser.Game(config);

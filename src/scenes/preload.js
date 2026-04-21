@@ -1,15 +1,21 @@
-class preload extends Phaser.Scene
-{
+class PreloadScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'PreloadScene' });
+    }
+
     preload() {
-        // Preloading all visual assets i.e. environment assets, sprite assets, etc.
-        this.load.image('logo', 'assets/icons/logo.png');
-        this.load.image('typwrtr', 'assets/environment/typwrtr.png');
-        this.load.sprite('paper', 'assets/sprites/paper.png');
+        // Visual assets
+        this.load.image('logo',     'assets/icons/logo.png');
+        this.load.image('typwrtr',  'assets/environment/typwrtr.png');
         this.load.image('nightSky', 'assets/environment/nightSky.png');
+        // Paper is drawn procedurally so no image needed
 
-        // Preloading all SFX assets
-        this.load.sound('crickets', 'assets/sfx/crickets.mp3');
-        this.load.sound('type', 'assets/sfx/type.mp3');
+        // SFX
+        this.load.audio('crickets', 'assets/sfx/crickets.mp3');
+        this.load.audio('type',     'assets/sfx/type.mp3');
+    }
 
+    create() {
+        this.scene.start('MenuScene');
     }
 }
