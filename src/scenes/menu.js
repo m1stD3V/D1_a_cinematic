@@ -18,11 +18,12 @@ class MenuScene extends Phaser.Scene {
         // Shifted up slightly to keep the moon & window prominent.
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         if (this.textures.exists('nightSky')) {
-            this.add.image(W / 2, H / 2 - 30, 'nightSky').setScale(1.38);
+            this.add.image(W / 2, H / 2 - 30, 'nightSky').setScale(1.5).setDepth(0);
         } else {
             const bg = this.add.graphics();
             bg.fillGradientStyle(0x050510, 0x050510, 0x0f0f2a, 0x0f0f2a, 1);
             bg.fillRect(0, 0, W, H);
+            bg.setDepth(0);
         }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -30,9 +31,10 @@ class MenuScene extends Phaser.Scene {
         // it sits on the implied desk. Keys bleed off the bottom edge.
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         if (this.textures.exists('typwrtr')) {
-            this.add.image(W / 2, H + 30, 'typwrtr')
+            this.add.image(W / 2, H + 80, 'typwrtr')
                 .setScale(0.28)
-                .setOrigin(0.5, 1);
+                .setOrigin(0.5, 1)
+                .setDepth(10);
         }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -46,6 +48,7 @@ class MenuScene extends Phaser.Scene {
         const paperY = paperBottom - paperH / 2;
 
         const paper = this.add.graphics();
+        paper.setDepth(1);
         paper.fillStyle(0xf5f0e0, 1);
         paper.fillRect(paperX - paperW / 2, paperY - paperH / 2, paperW, paperH);
         paper.lineStyle(1, 0xcec6ae, 0.55);
@@ -108,7 +111,7 @@ class MenuScene extends Phaser.Scene {
                 wordWrap: { width: paperW - 24 },
                 lineSpacing: 2,
             }
-        ).setOrigin(0, 0);
+        ).setOrigin(0, 0).setDepth(2);
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // LAYER 5 — Title + menu (hidden until intro fades out)
@@ -118,7 +121,7 @@ class MenuScene extends Phaser.Scene {
             fontSize: '22px',
             color: '#1a120a',
             letterSpacing: 5,
-        }).setOrigin(0.5).setAlpha(0);
+        }).setOrigin(0.5).setAlpha(0).setDepth(2);
 
         const menuDefs = [
             { label: 'START',   action: () => this.goToLoading('play')    },
@@ -126,20 +129,22 @@ class MenuScene extends Phaser.Scene {
             { label: 'QUIT',    action: () => window.close()              },
         ];
 
-        const menuStartY = paperY - paperH / 2 + 90;
-        this._menuStartY = menuStartY;
-        this._paperX     = paperX;
-        this.menuButtons = [];
+        const menuCenterY = paperY + 20;
+        this._menuCenterY = menuCenterY;
+        this._paperX      = paperX;
+        this.menuButtons  = [];
 
         menuDefs.forEach((item, i) => {
-            const btn = this.add.text(paperX + 10, menuStartY + i * 28, item.label, {
+            const btn = this.add.text(paperX, menuCenterY, item.label, {
                 fontFamily: '"Courier New", Courier, monospace',
-                fontSize: '13px',
+                fontSize: '24px',
                 color: '#5a4a30',
-                letterSpacing: 3,
+                letterSpacing: 4,
+                fontStyle: 'bold'
             })
             .setOrigin(0.5)
             .setAlpha(0)
+            .setDepth(2)
             .setInteractive({ useHandCursor: true })
             .on('pointerover', () => {
                 if (!this.menuActive) return;
@@ -154,18 +159,20 @@ class MenuScene extends Phaser.Scene {
             this.menuButtons.push(btn);
         });
 
-        const hintText = this.add.text(paperX, paperY + paperH / 2 - 14,
-            '↑ ↓  move    ENTER  select', {
+        const hintText = this.add.text(paperX, paperY + paperH / 2 - 20,
+            '[ NAVIGATION KEY ]\n↑ ↓ Move   ↵ Enter Select', {
             fontFamily: '"Courier New", Courier, monospace',
-            fontSize: '8px',
+            fontSize: '9px',
             color: '#8a7a60',
-        }).setOrigin(0.5).setAlpha(0);
+            align: 'center',
+            lineSpacing: 4
+        }).setOrigin(0.5).setAlpha(0).setDepth(2);
 
         this.cursor = this.add.text(0, 0, '›', {
             fontFamily: '"Courier New", Courier, monospace',
-            fontSize: '13px',
+            fontSize: '18px',
             color: '#1a120a',
-        }).setOrigin(0.5).setAlpha(0);
+        }).setOrigin(0.5).setAlpha(0).setDepth(2);
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // Keyboard navigation
@@ -243,15 +250,42 @@ class MenuScene extends Phaser.Scene {
     }
 
     updateSelection() {
+        const spacing = 45;
         this.menuButtons.forEach((btn, i) => {
-            if (i === this.selectedIndex) {
-                btn.setColor('#000000');
+            let diff = i - this.selectedIndex;
+            const count = this.menuButtons.length;
+
+            // Carousel wrapping logic: find the shortest path in the loop
+            if (diff > count / 2) diff -= count;
+            if (diff < -count / 2) diff += count;
+
+            const targetY = this._menuCenterY + diff * spacing;
+            const isSelected = i === this.selectedIndex;
+            const targetAlpha = isSelected ? 1 : 0.4;
+            const targetScale = isSelected ? 1.1 : 0.7;
+
+            this.tweens.add({
+                targets: btn,
+                y: targetY,
+                alpha: targetAlpha,
+                scaleX: targetScale,
+                scaleY: targetScale,
+                duration: 250,
+                ease: 'Cubic.easeOut',
+                onUpdate: () => {
+                    if (isSelected) {
+                        btn.setColor('#1a120a');
+                    } else {
+                        btn.setColor('#5a4a30');
+                    }
+                }
+            });
+
+            if (isSelected) {
                 this.cursor.setPosition(
-                    this._paperX - 52,
-                    this._menuStartY + i * 28
+                    this._paperX - 60,
+                    this._menuCenterY
                 );
-            } else {
-                btn.setColor('#5a4a30');
             }
         });
     }

@@ -15,39 +15,45 @@ class LoadingScene extends Phaser.Scene {
         // ── Pure black background ─────────────────────────────────────
         this.add.rectangle(W / 2, H / 2, W, H, 0x000000);
 
-        // ── Typewriter — large, left side, bleeds off bottom-left ─────
-        // Matches the mockup: machine fills bottom-left quadrant,
-        // right side of canvas stays black with the paper visible.
+        // ── Typewriter — large, bottom-left corner ─────────────────────
         if (this.textures.exists('typwrtr')) {
-            this.add.image(W * 0.24, H + 20, 'typwrtr')
-                .setScale(0.62)
-                .setOrigin(0.5, 1);
+            this.add.image(-120, H + 120, 'typwrtr')
+                .setScale(0.7)
+                .setOrigin(0, 1)
+                .setDepth(10);
         }
 
-        // ── Paper in the carriage slot ────────────────────────────────
-        // At scale 0.62, the carriage sits roughly at H - 330
-        const paperW = 240;
-        const paperH = 72;
-        const paperX = W * 0.24;
-        const paperY = H - 332;
+        // ── Paper behind the typewriter ────────────────────────────────
+        const paperW = 400;
+        const paperH = 500;
+        const paperX = 250;
+        const paperY = H - 250;
 
         const paper = this.add.graphics();
+        paper.setDepth(1);
         paper.fillStyle(0xf5f0e0, 1);
         paper.fillRect(paperX - paperW / 2, paperY - paperH / 2, paperW, paperH);
+        
+        // Add some lines to the paper for detail
+        paper.lineStyle(1, 0xcec6ae, 0.5);
+        for (let ly = paperY - paperH / 2 + 30; ly < paperY + paperH / 2 - 20; ly += 25) {
+            paper.lineBetween(paperX - paperW / 2 + 20, ly, paperX + paperW / 2 - 20, ly);
+        }
 
         // ── "LOADING ..." typed on the paper ─────────────────────────
         const loadStr = 'LOADING ...';
         const loadText = this.add.text(
-            paperX - paperW / 2 + 16,
-            paperY - paperH / 2 + 18,
+            paperX - paperW / 2 + 30,
+            paperY - paperH / 2 + 40,
             '',
             {
                 fontFamily: '"Courier New", Courier, monospace',
-                fontSize: '20px',
+                fontSize: '28px',
                 color: '#1a120a',
-                letterSpacing: 5,
+                letterSpacing: 8,
+                fontStyle: 'bold'
             }
-        ).setOrigin(0, 0);
+        ).setOrigin(0, 0).setDepth(2);
 
         // Typewriter sound
         let typeSound = null;
@@ -71,12 +77,13 @@ class LoadingScene extends Phaser.Scene {
         const totalTypeMs = loadStr.length * 110 + 150;
 
         this.time.delayedCall(totalTypeMs, () => {
-            const cursorX = paperX - paperW / 2 + 16 + loadText.width + 3;
-            const blinkCursor = this.add.text(cursorX, paperY - paperH / 2 + 18, '|', {
+            const cursorX = paperX - paperW / 2 + 30 + loadText.width + 10;
+            const blinkCursor = this.add.text(cursorX, paperY - paperH / 2 + 40, '|', {
                 fontFamily: '"Courier New", Courier, monospace',
-                fontSize: '20px',
+                fontSize: '28px',
                 color: '#1a120a',
-            }).setOrigin(0, 0);
+                fontStyle: 'bold'
+            }).setOrigin(0, 0).setDepth(2);
 
             this.tweens.add({
                 targets: blinkCursor,
