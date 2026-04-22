@@ -55,21 +55,12 @@ class LoadingScene extends Phaser.Scene {
             }
         ).setOrigin(0, 0).setDepth(2);
 
-        // Typewriter sound
-        let typeSound = null;
-        if (this.cache.audio.exists('type')) {
-            typeSound = this.sound.add('type', { volume: 0.5 });
-            // Attempt to play immediately; browser may have unlocked audio
-            // from the earlier logo/menu interaction
-        }
-
         let charIdx = 0;
         this.time.addEvent({
             delay: 110,
             repeat: loadStr.length - 1,
             callback: () => {
                 loadText.setText(loadStr.substring(0, ++charIdx));
-                if (typeSound) typeSound.play();
             },
         });
 

@@ -12,6 +12,9 @@ class MenuScene extends Phaser.Scene {
         const W = this.scale.width;   // 800
         const H = this.scale.height;  // 600
 
+        // Fade in from black on entry
+        this.cameras.main.fadeIn(1000, 0, 0, 0);
+
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // LAYER 1 — Background zoomed in so curtains + window arch fill
         // the frame. setScale(1.38) zooms without distorting aspect ratio.
@@ -64,24 +67,20 @@ class MenuScene extends Phaser.Scene {
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // AUDIO — browsers block autoplay until a user gesture occurs.
-        // We attempt to play immediately (works if LogoScene already got
-        // a click/keypress), then fall back to the first interaction.
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         let cricketSound = null;
-        let typeSound    = null;
-        let audioStarted = false;
 
         if (this.cache.audio.exists('crickets')) {
-            cricketSound = this.sound.add('crickets', { loop: true, volume: 0.4 });
-        }
-        if (this.cache.audio.exists('type')) {
-            typeSound = this.sound.add('type', { volume: 0.55 });
+            cricketSound = this.sound.add('crickets', { loop: true, volume: 0.3 });
         }
 
         const startAmbient = () => {
-            if (audioStarted) return;
-            audioStarted = true;
-            if (cricketSound) cricketSound.play();
+            if (this.sound.context.state === 'suspended') {
+                this.sound.context.resume();
+            }
+            if (cricketSound && !cricketSound.isPlaying) {
+                cricketSound.play();
+            }
         };
 
         // Try immediately — succeeds if user already interacted (logo scene)
@@ -199,16 +198,29 @@ class MenuScene extends Phaser.Scene {
         // TIMELINE — small pause, then type, then swap to menu
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         let charIdx = 0;
-        const charDelay = 60;
+        const charDelay = 75;
+        let typeLoop = null;
 
         this.time.delayedCall(500, () => {
-            startAmbient(); // second attempt after scene has settled
+            // Start the looping sound when typing begins
+            if (this.cache.audio.exists('type')) {
+                typeLoop = this.sound.add('type', { loop: true, volume: 0.6 });
+                if (this.sound.context.state === 'suspended') {
+                    this.sound.context.resume();
+                }
+                typeLoop.play();
+            }
+
             this.time.addEvent({
                 delay: charDelay,
                 repeat: introString.length - 1,
                 callback: () => {
                     introText.setText(introString.substring(0, ++charIdx));
-                    if (typeSound) typeSound.play();
+                    
+                    // Stop the loop exactly when typing finishes
+                    if (charIdx === introString.length && typeLoop) {
+                        typeLoop.stop();
+                    }
                 },
             });
         });
