@@ -17,6 +17,9 @@ Two Geometric Shapes:
 1. Main menu paper (loaded on menu scene, and drawn with the phaser tooling)
 2. Loading paper (smaller strip of paper on loading scene, and drawn with the phaser tooling)
 
+Logo typeface:
+1. Main logo type for "MISTWORKS" (loaded on the logo scene)
+
 One Multi-line text block:
 1. Main teaser before menu (loaded on menu scene)
 
